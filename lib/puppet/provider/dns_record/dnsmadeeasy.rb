@@ -26,7 +26,7 @@ end
 
 module DNSMadeeasy
   module Connection
-    def dnsmadeeast
+    def dnsmadeeasy
       @@dnsmadeeasy ||= Fog::DNS.new( :provider               => "DNSMadeEasy",
                                       :dnsmadeeasy_api_key    => @username,
                                       :dnsmadeeasy_secret_key => @password )
