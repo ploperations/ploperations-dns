@@ -34,6 +34,10 @@ Puppet::Type.newtype(:dns_record) do
     desc "The user name (or AWS key)."
   end
 
+  newparam(:customername) do
+    desc "The customer name (needed for DynECT)."
+  end
+
   newparam(:password) do
     desc "The password (or AWS Secret key)."
   end
