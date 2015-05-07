@@ -12,15 +12,15 @@ Puppet::Type.newtype(:dns_record) do
     desc "The domain to add the record to."
   end
 
-  newparam(:content, :array_matching => :all) do
+  newproperty(:content, :array_matching => :all) do
     desc "The content of the DNS record."
   end
 
-  newparam(:type) do
+  newproperty(:type) do
     desc "The type of DNS record."
   end
 
-  newparam(:ttl) do
+  newproperty(:ttl) do
     desc "The TTL of the DNS record. Defaults to 3600."
 
     defaultto "3600"
