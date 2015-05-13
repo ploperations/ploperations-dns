@@ -57,16 +57,32 @@ Puppet::Type.type(:dns_record).provide(:dynect) do
 
   def self.prefetch(resources)
     get_token(resources)
+    # Populate array with all resources
+    instances = []
+    domains = []
+    # Get unique list of domains and only grab those zones
     resources.each do |name, resource|
-      Puppet.debug("prefetching for #{name}")
-      url = "https://api.dynect.net/REST/AllRecord/#{resource[:domain]}/"
+      domains << resource['domain'] unless domains.include?(resource['domain'])
+    end
+    domains.each do |dom|
+      url = "https://api.dynect.net/REST/AllRecord/#{dom}/"
       response = RestClient.get(url,@headers)
       obj = JSON.parse(response)
       if obj['status'] != 'success'
         #TODO error handle for dynect
       end
-      # Find URL that contains the record ID, save it, and request more detailed information from dynect
-      index = obj['data'].index{|s| s.include?"#{resource[:type]}Record/#{resource[:domain]}/#{resource[:name]}"}
+      instances << obj
+    end
+    resources.each do |name, resource|
+      Puppet.debug("prefetching for #{name}")
+      index = nil
+      objindex = nil
+      instances.each do |obj|
+        objindex = instances.index(obj)
+        # Find URL that contains the record ID, save it, and request more detailed information from dynect
+        index = obj['data'].index{|s| s.include?"#{resource[:type]}Record/#{resource[:domain]}/#{resource[:name]}"}
+        break unless index.nil?
+      end
       if index.nil?
         # Post and put used to determine if updating or creating a record
         # Post == create, put == update
@@ -78,7 +94,7 @@ Puppet::Type.type(:dns_record).provide(:dynect) do
         result[:action] = "post"
         resource.provider = new(result)
       else
-        @url2 = "https://api.dynect.net#{obj['data'][index]}"
+        @url2 = "https://api.dynect.net#{instances[objindex]['data'][index]}"
         response2 = RestClient.get(@url2,@headers)
         obj2 = JSON.parse(response2)
         if obj2['data']['fqdn'] == resource[:name] and obj2['data']['ttl'] == resource[:ttl].to_i and obj2['data']['rdata'] == set_rdata(resource)
