@@ -6,10 +6,28 @@ Puppet::Type.newtype(:dns_record) do
 
   newparam(:name, :namevar => true) do
     desc "The name of the DNS record."
+
+    # Remove trailing . if present
+    munge do |value|
+      if value[-1] == '.'
+        value = value.chomp('.')
+      else
+        value
+      end
+    end
   end
 
   newparam(:domain) do
     desc "The domain to add the record to."
+
+    # Remove trailing . if present
+    munge do |value|
+      if value[-1] == '.'
+        value = value.chomp('.')
+      else
+        value
+      end
+    end
   end
 
   newproperty(:content, :array_matching => :all) do
@@ -22,6 +40,13 @@ Puppet::Type.newtype(:dns_record) do
 
   newproperty(:ttl) do
     desc "The TTL of the DNS record. Defaults to 3600."
+
+    munge do |value|
+      value.to_i
+    end
+    validate do |value|
+      fail 'TTL must be an integer' unless value.to_i.to_s == value.to_s
+    end
 
     defaultto "3600"
   end
@@ -40,5 +65,14 @@ Puppet::Type.newtype(:dns_record) do
 
   newparam(:password) do
     desc "The password (or AWS Secret key)."
+  end
+
+  newparam(:ddns_key) do
+    desc "The file used for bind ddns updates with secret and algorithm."
+    validate do |value|
+      unless File.exists? value
+        raise ArgumentError, "%s does not exists" % value
+      end
+    end
   end
 end

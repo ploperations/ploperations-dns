@@ -1,9 +1,3 @@
-require 'fog'
-require 'puppet'
-
-gem 'rspec'
-
-RSpec.configure do |config|
-  Fog.mock!
-end
-
+require 'rubygems'
+require 'puppetlabs_spec_helper/module_spec_helper'
+require 'rspec-dns'
