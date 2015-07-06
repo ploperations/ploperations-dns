@@ -21,12 +21,6 @@
 require 'pp'
 require 'nokogiri'
 
-begin
-    require "fog"
-rescue LoadError
-    raise Puppet::Error, "Missing gem 'fog'"
-end
-
 module Route53
   module Connection
     def route53
@@ -39,6 +33,7 @@ end
 
 Puppet::Type.type(:dns_record).provide(:route53) do
 
+  confine :feature => :fog
   include Route53::Connection
 
   desc "Manage AWS Route 53 records."
