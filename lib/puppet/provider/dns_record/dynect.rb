@@ -20,16 +20,11 @@
 
 
 Puppet::Type.type(:dns_record).provide(:dynect) do
+  desc "Manage DynECT records."
 
   require 'json'
+  confine :feature => :rest_client
 
-  begin
-      require "rest_client"
-  rescue LoadError
-      raise Puppet::Error, "Missing gem 'rest-client'"
-  end
-
-  desc "Manage DynECT records."
 
   mk_resource_methods
 

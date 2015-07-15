@@ -18,12 +18,6 @@
 # limitations under the License.
 #
 
-begin
-  require "fog"
-rescue LoadError
-  raise Puppet::Error, "Missing gem 'fog'"
-end
-
 module DNSMadeeasy
   module Connection
     def dnsmadeeasy
@@ -36,6 +30,7 @@ end
 
 Puppet::Type.type(:dns_record).provide(:dnsmadeeasy) do
 
+  confine :feature => :fog
   include DNSMadeeasy::Connection
 
   desc "Manage DNSMadeEasy records."

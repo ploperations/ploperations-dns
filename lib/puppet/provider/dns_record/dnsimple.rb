@@ -18,12 +18,6 @@
 # limitations under the License.
 #
 
-begin
-  require "fog"
-rescue LoadError
-  raise Puppet::Error, "Missing gem 'fog'"
-end
-
 module DNSimple
   module Connection
     def dnsimple
@@ -36,6 +30,7 @@ end
 
 Puppet::Type.type(:dns_record).provide(:dnsimple) do
 
+  confine :feature => :fog
   include DNSimple::Connection
 
   desc "Manage DNSimple records."
