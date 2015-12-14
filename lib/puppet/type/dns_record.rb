@@ -7,7 +7,11 @@ Puppet::Type.newtype(:dns_record) do
   newparam(:name, :namevar => true) do
     desc "The name of the DNS record."
 
-    # Remove trailing . if present
+    validate do |value|
+      fail Puppet::Error, 'Empty values are not allowed' if value == ''
+    end
+
+    # Remove trailing . if present  
     munge do |value|
       if value[-1] == '.'
         value = value.chomp('.')
