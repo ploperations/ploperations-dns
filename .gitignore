@@ -1,0 +1,7 @@
+.config
+.vagrant
+
+# log files
+*.log
+
+Gemfile.lock
