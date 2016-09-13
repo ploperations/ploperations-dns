@@ -45,19 +45,19 @@ dns_record { "test-2a-records.ops.puppetlabs.net":
 }
  
 dns_record { "test-cname.ops.puppetlabs.net":
-  domain => 'ops.puppetlabs.net',
+  ensure  => present,
+  domain  => 'ops.puppetlabs.net',
   content => 'test-1a-record.ops.puppetlabs.net',
   type    => 'CNAME',
   ttl     => '16000',
-  ensure  => present
 }
  
 dns_record { "test-txt.ops.puppetlabs.net":
-  domain => 'ops.puppetlabs.net',
+  ensure  => present,
+  domain  => 'ops.puppetlabs.net',
   content => 'Test TXT Record',
   type    => 'TXT',
   ttl     => '32000',
-  ensure  => present
 }
 ~~~
 
@@ -73,7 +73,7 @@ Dns_record {
 }
 
 dns_record { "test-1a-record.puppetware.org":
-  ensure  => present
+  ensure  => present,
   domain  => 'puppetware.org',
   content => '172.16.100.150',
   type    => 'A',
@@ -83,7 +83,7 @@ dns_record { "test-1a-record.puppetware.org":
 # content can also accept array
 
 dns_record { "test-1a-record.puppetware.org":
-  ensure  => present
+  ensure  => present,
   domain  => 'puppetware.org',
   content => ['172.16.100.150', '172.16.100.134'],
   type    => 'A',
@@ -91,7 +91,7 @@ dns_record { "test-1a-record.puppetware.org":
 }
 
 dns_record { "test-cname.puppetware.org":
-  ensure  => present
+  ensure  => present,
   domain  => 'puppetware.org',
   content => 'test-1a-record.puppetware.org',
   type    => 'CNAME',
@@ -99,7 +99,7 @@ dns_record { "test-cname.puppetware.org":
 }
 
 dns_record { "test-txt.puppetware.org":
-  ensure  => present
+  ensure  => present,
   domain  => 'puppetware.org',
   content => 'Test TXT Record',
   type    => 'TXT',
