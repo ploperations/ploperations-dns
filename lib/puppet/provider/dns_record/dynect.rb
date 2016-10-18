@@ -85,7 +85,7 @@ Puppet::Type.type(:dns_record).provide(:dynect) do
     Puppet.debug("content_dup: #{content_dup}")
     case resource[:ensure]
     when :present
-      existing = zone.records.all.select do |r| r.name == resource[:name] end
+      existing = zone.records.all({fqdn:resource[:name]})
       Puppet.debug("EXISTING: #{existing}")
 
       to_remove, existing = existing.partition do |r|
@@ -128,7 +128,7 @@ Puppet::Type.type(:dns_record).provide(:dynect) do
         end
       end
     when :absent
-      to_remove = zone.records.all.select do |r|
+      to_remove = zone.records.all({fqdn:resource[:name]}).select do |r|
         resource[:content].include?(r.rdata['address']) && r.type == resource[:type] && r.name == resource[:name]
       end
       Puppet.debug("Removing: #{resource[:name]}: #{to_remove}")
@@ -154,8 +154,8 @@ Puppet::Type.type(:dns_record).provide(:dynect) do
     Puppet.debug("Checking if exists #{resource}")
     @customername, @username, @password = resource[:customername], resource[:username], resource[:password]
     zone = dynect.zones.get(resource[:domain])
-    existing = zone.records.all.select do |r|
-      r.name == resource[:name] && r.type == resource[:type]
+    existing = zone.records.all({fqdn:resource[:name]}).select do |r|
+      r.type == resource[:type]
     end
     Puppet.debug("EXISTING-3: #{existing}, content: #{resource[:content]}")
     (resource[:content] - existing.map do |r| r.rdata['address'] end).empty?
