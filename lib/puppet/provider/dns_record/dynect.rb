@@ -89,7 +89,9 @@ Puppet::Type.type(:dns_record).provide(:dynect) do
       Puppet.debug("EXISTING: #{existing}")
 
       to_remove, existing = existing.partition do |r|
-        (!resource[:content].include?(r.rdata['address'])) && r.type == resource[:type] && r.name == resource[:name]
+        (!resource[:content].include?(r.rdata['address'])) &&
+          r.type == resource[:type] &&
+          r.name == resource[:name]
       end
 
       Puppet.debug("EXISTING-2: #{existing}")
@@ -116,6 +118,7 @@ Puppet::Type.type(:dns_record).provide(:dynect) do
         content_dup -= [r.rdata['address']]
       end
       Puppet.debug("content_dup-2: #{content_dup}")
+      # The remaining records in content_dup are 'new' and should be created
       if !content_dup.empty?
         content_dup.each do |new_ip|
           zone.records.new(
@@ -129,7 +132,12 @@ Puppet::Type.type(:dns_record).provide(:dynect) do
       end
     when :absent
       to_remove = zone.records.all({fqdn:resource[:name]}).select do |r|
-        resource[:content].include?(r.rdata['address']) && r.type == resource[:type] && r.name == resource[:name]
+        resource[:content].include?(r.rdata['address']) &&
+          r.type == resource[:type] &&
+          # In case resource[:name] resolves to multiple records(e.g
+          # some.domain.com would resolve to (*.)some.domain.com)
+          # compare the record name to apply only on relevant record(s)
+          r.name == resource[:name]
       end
       Puppet.debug("Removing: #{resource[:name]}: #{to_remove}")
       to_remove.each do |r|
@@ -155,7 +163,11 @@ Puppet::Type.type(:dns_record).provide(:dynect) do
     @customername, @username, @password = resource[:customername], resource[:username], resource[:password]
     zone = dynect.zones.get(resource[:domain])
     existing = zone.records.all({fqdn:resource[:name]}).select do |r|
-      r.type == resource[:type]
+      r.type == resource[:type] &&
+        # In case resource[:name] resolves to multiple records(e.g
+        # some.domain.com would resolve to (*.)some.domain.com)
+        # compare the record name to apply only on relevant record(s)
+        r.name == resource[:name]
     end
     Puppet.debug("EXISTING-3: #{existing}, content: #{resource[:content]}")
     (resource[:content] - existing.map do |r| r.rdata['address'] end).empty?
