@@ -101,21 +101,20 @@ Puppet::Type.type(:dns_record).provide(:dynect) do
         r.destroy
         publish_zone = true
       end
+      needs_update = false
       existing.each do |r|
-        if r.type != resource[:type]
-          r.type = resource[:type]
-          needs_update = true
-        end
-        if (! r.ttl.nil?) && r.ttl != resource[:ttl]
+        if r.ttl != resource[:ttl]
           r.ttl = resource[:ttl]
           needs_update = true
         end
-        if needs_update
-          Puppet.debug("Updating #{r.inspect}")
-          r.save
-          publish_zone = true
-        end
         content_dup -= [r.rdata['address']]
+      end
+      if needs_update
+        Puppet.debug("Updating #{resource[:name]}")
+        # Calling 'save' applys changes on all DNS node records and 'publish's
+        # the zone. so it's enough to call save on the 1st record
+        existing[0].save(true) # replace
+        publish_zone = true
       end
       Puppet.debug("content_dup-2: #{content_dup}")
       # The remaining records in content_dup are 'new' and should be created
