@@ -14,7 +14,7 @@ RSpec.configure do |c|
       if fact_on(host, 'osfamily') == 'Debian'
         install_package(master, 'ruby-dev build-essential libxml++2.6-dev')
       end
-      on master, "gem install rest-client fog --no-ri --no-rdoc"
+      on master, "gem install fog --no-ri --no-rdoc"
       on master, "gem list"
     end
   end
