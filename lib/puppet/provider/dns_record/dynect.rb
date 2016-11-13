@@ -85,8 +85,12 @@ Puppet::Type.type(:dns_record).provide(:dynect) do
     Puppet.debug("content_dup: #{content_dup}")
     case resource[:ensure]
     when :present
-      existing = zone.records.all({fqdn:resource[:name]})
-      Puppet.debug("EXISTING: #{existing}")
+      existing = begin
+                   zone.records.all({fqdn:resource[:name]})
+                 rescue Excon::Error::NotFound
+                   []
+                 end
+      Puppet.debug("PUPPET_DNS: EXISTING: #{existing}")
 
       to_remove, existing = existing.partition do |r|
         (!resource[:content].include?(r.rdata['address'])) &&
@@ -161,12 +165,16 @@ Puppet::Type.type(:dns_record).provide(:dynect) do
     Puppet.debug("Checking if exists #{resource}")
     @customername, @username, @password = resource[:customername], resource[:username], resource[:password]
     zone = dynect.zones.get(resource[:domain])
-    existing = zone.records.all({fqdn:resource[:name]}).select do |r|
-      r.type == resource[:type] &&
-        # In case resource[:name] resolves to multiple records(e.g
-        # some.domain.com would resolve to (*.)some.domain.com)
-        # compare the record name to apply only on relevant record(s)
-        r.name == resource[:name]
+    begin
+      existing = zone.records.all({fqdn:resource[:name]}).select do |r|
+        r.type == resource[:type] &&
+          # In case resource[:name] resolves to multiple records(e.g
+          # some.domain.com would resolve to (*.)some.domain.com)
+          # compare the record name to apply only on relevant record(s)
+          r.name == resource[:name]
+      end
+    rescue Excon::Error::NotFound
+      return false
     end
     Puppet.debug("EXISTING-3: #{existing}, content: #{resource[:content]}")
     (resource[:content] - existing.map do |r| r.rdata['address'] end).empty?
