@@ -19,7 +19,6 @@
 #
 
 require 'pp'
-require 'nokogiri'
 
 module Route53
   module Connection
