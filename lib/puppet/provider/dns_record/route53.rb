@@ -42,9 +42,11 @@ Puppet::Type.type(:dns_record).provide(:route53) do
 
   def create
     @zone = route53.zones.get(resource[:zone_id])
+    Puppet.debug("Comparing all records to #{resource[:name]} #{resource[:type]}")
     @zone.records.all!.each do |r|
+      Puppet.debug("Existing record: #{r.name} #{r.type}")
       if r.name.chomp('.') == resource[:name] && r.type == resource[:type]
-        Puppet.debug("Route53: Cannot modify records, must remove #{resource[:name]}.")
+        Puppet.info("Route53: Cannot modify records, must remove #{resource[:name]}.")
         r.destroy
       end
     end
@@ -55,7 +57,7 @@ Puppet::Type.type(:dns_record).provide(:route53) do
                                      :value => resource[:content],
                                      :type  => resource[:type],
                                      :ttl   => resource[:ttl] )
-      Puppet.info("Route53: Created #{resource[:type]} record for #{resource[:name]}.#{resource[:domain]}")
+      Puppet.info("Route53: Created #{resource[:type]} record for #{resource[:name]}")
     rescue Excon::Errors::UnprocessableEntity
       output = Nokogiri::XML( e.response.body ).xpath( "//xmlns:Message" ).text
       Puppet.info("Route53: #{output}")
@@ -68,8 +70,10 @@ Puppet::Type.type(:dns_record).provide(:route53) do
     @zone = route53.zones.get(resource[:zone_id])
     records = @zone.records.all!
     if records.detect { |r| r.name.chomp('.') == resource[:name] and r.value == resource[:content] and r.ttl == resource[:ttl].to_s }
+      Puppet.debug("Record #{resource[:name]} #{resource[:type]} with content #{resource[:content]} #{resource[:ttl]} found.")
       return true
     else
+      Puppet.debug("Record #{resource[:name]} #{resource[:type]} with content #{resource[:content]} #{resource[:ttl]} not found.")
       return false
     end
   end
@@ -78,8 +82,8 @@ Puppet::Type.type(:dns_record).provide(:route53) do
     @zone = route53.zones.get(resource[:zone_id])
     @zone.records.all!.each do |r|
       if ( r.name.chomp('.') == resource[:name] ) and ( r.type == resource[:type] )
+        Puppet.info("Route53: destroying #{resource[:type]} record for #{resource[:name]}")
         r.destroy
-        Puppet.info("Route53: destroyed #{resource[:type]} record for #{resource[:name]}.#{resource[:domain]}")
       end
     end
   end
