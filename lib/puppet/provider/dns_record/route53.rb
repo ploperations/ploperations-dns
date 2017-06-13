@@ -27,8 +27,8 @@ module Route53
       @@zone ||= Fog::DNS.new({ :provider => "aws",
                                 :aws_access_key_id => @username,
                                 :aws_secret_access_key => @password } )
-   end
- end
+    end
+  end
 end
 
 Puppet::Type.type(:dns_record).provide(:route53) do
@@ -49,7 +49,7 @@ Puppet::Type.type(:dns_record).provide(:route53) do
 
     begin
       Puppet.debug("Attempting to create record type #{resource[:type]} for #{resource[:name]} as #{resource[:content]}")
-      record = @zone.records.create( :name  => resource[:name],
+      @zone.records.create( :name  => resource[:name],
                                      :value => resource[:content],
                                      :type  => resource[:type],
                                      :ttl   => resource[:ttl] )
