@@ -26,7 +26,7 @@ This is a DNS record management module with support for creating records in DNSi
 
 ### Requirements
 
-The gems 'rest-client' is needed to manage DynECT, while fog is needed to manage everything else except bind.
+The 'fog' gem is needed to manage all providers except Bind.
 
 For Bind, you'll need to have a key configured for DDNS - https://wiki.debian.org/DDNS has more information
 
@@ -51,19 +51,19 @@ dns_record { "test-2a-records.ops.puppetlabs.net":
 }
  
 dns_record { "test-cname.ops.puppetlabs.net":
-  domain => 'ops.puppetlabs.net',
+  ensure  => present,
+  domain  => 'ops.puppetlabs.net',
   content => 'test-1a-record.ops.puppetlabs.net',
   type    => 'CNAME',
   ttl     => '16000',
-  ensure  => present
 }
  
 dns_record { "test-txt.ops.puppetlabs.net":
-  domain => 'ops.puppetlabs.net',
+  ensure  => present,
+  domain  => 'ops.puppetlabs.net',
   content => 'Test TXT Record',
   type    => 'TXT',
   ttl     => '32000',
-  ensure  => present
 }
 ~~~
 
@@ -79,15 +79,25 @@ Dns_record {
 }
 
 dns_record { "test-1a-record.puppetware.org":
-  ensure  => present
+  ensure  => present,
   domain  => 'puppetware.org',
   content => '172.16.100.150',
   type    => 'A',
   ttl     => '4800',
 }
 
+# content can also accept array
+
+dns_record { "test-1a-record.puppetware.org":
+  ensure  => present,
+  domain  => 'puppetware.org',
+  content => ['172.16.100.150', '172.16.100.134'],
+  type    => 'A',
+  ttl     => '4800',
+}
+
 dns_record { "test-cname.puppetware.org":
-  ensure  => present
+  ensure  => present,
   domain  => 'puppetware.org',
   content => 'test-1a-record.puppetware.org',
   type    => 'CNAME',
@@ -95,7 +105,7 @@ dns_record { "test-cname.puppetware.org":
 }
 
 dns_record { "test-txt.puppetware.org":
-  ensure  => present
+  ensure  => present,
   domain  => 'puppetware.org',
   content => 'Test TXT Record',
   type    => 'TXT',
@@ -130,7 +140,7 @@ For the acceptance test, set up a few environment variables to ensure no issues.
 #####`type`
 *Required* The type of the DNS record.  Accepts A, TXT, and CNAME for dynect, all types for bind9.
 #####`content`
-*Required* The value of the DNS record. Can accept an array for bind9.
+*Required* The value of the DNS record. Can accept an array for bind9 and DynECT.
 
 
 ## Limitations

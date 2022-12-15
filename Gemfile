@@ -12,6 +12,4 @@ group :test do
   gem 'beaker-puppet_install_helper', :require => false
   gem 'net-dns'
   gem 'dnsruby'
-  gem 'rest-client'
-
 end
