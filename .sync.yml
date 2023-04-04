@@ -1,0 +1,36 @@
+---
+.gitlab-ci.yml:
+  delete: true
+.travis.yml:
+  delete: true
+appveyor.yml:
+  delete: true
+Gemfile:
+  required:
+    ':development':
+      - gem: 'github_changelog_generator'
+        version: "~> 1.16', '>= 1.16.4"
+      # https://github.com/deanwilson/puppet-lint-absolute_template_path-check/issues/110
+      # - gem: 'puppet-lint-absolute_template_path'
+      #   version: "~> 1.0', '>= 1.0.1"
+      # https://github.com/voxpupuli/puppet-lint-spaceship_operator_without_tag-check/issues/14
+      # - gem: 'puppet-lint-spaceship_operator_without_tag-check'
+      #   version: '~> 0.1'
+      # https://github.com/rodjek/puppet-lint-trailing_newline-check/issues/5
+      # - gem: 'puppet-lint-trailing_newline-check'
+      #   version: '~> 1.1'
+      # https://github.com/voxpupuli/puppet-lint-undef_in_function-check/issues/9
+      # - gem: 'puppet-lint-undef_in_function-check'
+      #   version: '~> 0.2'
+      - gem: 'rspec-puppet-utils'
+        version: '~> 3.4'
+      - gem: 'voxpupuli-puppet-lint-plugins'
+        version: '~> 4.0'
+Rakefile:
+  changelog_version_tag_pattern: '%s'
+  linter_fail_on_warnings: true
+  requires:
+    - 'puppet-strings/tasks'
+spec/spec_helper.rb:
+  mock_with: ':rspec'
+  coverage_report: true

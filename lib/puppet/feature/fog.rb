@@ -1,1 +1,1 @@
-Puppet.features.add(:fog, libs: ['fog']) 
+Puppet.features.add(:fog, libs: ['fog'])

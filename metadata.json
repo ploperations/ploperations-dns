@@ -1,15 +1,70 @@
 {
-  "name": "puppetlabs-dns",
+  "name": "ploperations-dns",
   "version": "0.1.0",
-  "author": "Puppet Labs",
+  "author": "ploperations",
   "summary": "Manage DNS records in Puppet",
   "license": "Apache-2.0",
-  "source": "https://github.com/puppetlabs/puppetlabs-dns",
-  "project_page": "https://github.com/puppetlabs/puppetlabs-dns",
-  "issues_url": "https://github.com/puppetlabs/puppetlabs-dns/issues",
+  "source": "https://github.com/ploperations/ploperations-dns",
+  "project_page": "https://github.com/ploperations/ploperations-dns",
+  "issues_url": "https://github.com/ploperations/ploperations-dns/issues",
   "dependencies": [
-    {"name":"puppetlabs-stdlib","version_requirement":">= 1.0.0"}
+    {
+      "name": "puppetlabs-stdlib",
+      "version_requirement": ">= 1.0.0"
+    }
   ],
-  "data_provider": null
+  "operatingsystem_support": [
+    {
+      "operatingsystem": "CentOS",
+      "operatingsystemrelease": [
+        "7"
+      ]
+    },
+    {
+      "operatingsystem": "OracleLinux",
+      "operatingsystemrelease": [
+        "7"
+      ]
+    },
+    {
+      "operatingsystem": "RedHat",
+      "operatingsystemrelease": [
+        "8"
+      ]
+    },
+    {
+      "operatingsystem": "Scientific",
+      "operatingsystemrelease": [
+        "7"
+      ]
+    },
+    {
+      "operatingsystem": "Debian",
+      "operatingsystemrelease": [
+        "10"
+      ]
+    },
+    {
+      "operatingsystem": "Ubuntu",
+      "operatingsystemrelease": [
+        "18.04"
+      ]
+    },
+    {
+      "operatingsystem": "windows",
+      "operatingsystemrelease": [
+        "2019",
+        "10"
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "name": "puppet",
+      "version_requirement": ">= 6.21.0 < 8.0.0"
+    }
+  ],
+  "pdk-version": "2.7.1",
+  "template-url": "pdk-default#2.7.4",
+  "template-ref": "tags/2.7.4-0-g58edf57"
 }
-
