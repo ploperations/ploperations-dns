@@ -27,8 +27,8 @@ module Route53
       @@zone ||= Fog::DNS.new({ :provider => "aws",
                                 :aws_access_key_id => @username,
                                 :aws_secret_access_key => @password } )
-   end
- end
+    end
+  end
 end
 
 Puppet::Type.type(:dns_record).provide(:route53) do
@@ -38,22 +38,26 @@ Puppet::Type.type(:dns_record).provide(:route53) do
 
   desc "Manage AWS Route 53 records."
 
+  mk_resource_methods
+
   def create
     @zone = route53.zones.get(resource[:zone_id])
-    @zone.records.all.each do |r|
-      if r.name == resource[:name]
-        Puppet.debug("Route53: Cannot modify records, must remove #{resource[:name]}.")
+    Puppet.debug("Comparing all records to #{resource[:name]} #{resource[:type]}")
+    @zone.records.all!.each do |r|
+      Puppet.debug("Existing record: #{r.name} #{r.type}")
+      if r.name.chomp('.') == resource[:name] && r.type == resource[:type]
+        Puppet.info("Route53: Cannot modify records, must remove #{resource[:name]}.")
         r.destroy
       end
     end
 
     begin
       Puppet.debug("Attempting to create record type #{resource[:type]} for #{resource[:name]} as #{resource[:content]}")
-      record = @zone.records.create( :name  => resource[:name],
+      @zone.records.create( :name  => resource[:name],
                                      :value => resource[:content],
                                      :type  => resource[:type],
                                      :ttl   => resource[:ttl] )
-      Puppet.info("Route53: Created #{resource[:type]} record for #{resource[:name]}.#{resource[:domain]}")
+      Puppet.info("Route53: Created #{resource[:type]} record for #{resource[:name]}")
     rescue Excon::Errors::UnprocessableEntity
       output = Nokogiri::XML( e.response.body ).xpath( "//xmlns:Message" ).text
       Puppet.info("Route53: #{output}")
@@ -64,20 +68,22 @@ Puppet::Type.type(:dns_record).provide(:route53) do
     @username, @password = resource[:username], resource[:password]
     resource[:content] = resource[:content].is_a?(Array) ? resource[:content] : resource[:content].to_a
     @zone = route53.zones.get(resource[:zone_id])
-    records = @zone.records.all
-    if records.detect { |r| r.name == resource[:name] and r.value == resource[:content] and r.ttl == resource[:ttl] }
+    records = @zone.records.all!
+    if records.detect { |r| r.name.chomp('.') == resource[:name] and r.value == resource[:content] and r.ttl == resource[:ttl].to_s }
+      Puppet.debug("Record #{resource[:name]} #{resource[:type]} with content #{resource[:content]} #{resource[:ttl]} found.")
       return true
     else
+      Puppet.debug("Record #{resource[:name]} #{resource[:type]} with content #{resource[:content]} #{resource[:ttl]} not found.")
       return false
     end
   end
 
   def destroy
     @zone = route53.zones.get(resource[:zone_id])
-    @zone.records.all.each do |r|
-      if ( r.name == resource[:name] ) and ( r.type == resource[:type] )
+    @zone.records.all!.each do |r|
+      if ( r.name.chomp('.') == resource[:name] ) and ( r.type == resource[:type] )
+        Puppet.info("Route53: destroying #{resource[:type]} record for #{resource[:name]}")
         r.destroy
-        Puppet.info("Route53: destroyed #{resource[:type]} record for #{resource[:name]}.#{resource[:domain]}")
       end
     end
   end
