@@ -1,6 +1,0 @@
-script: "bundle exec rake validate && bundle exec rake lint && bundle exec rake spec SPEC_OPTS='--format documentation'"
-language: ruby
-rvm:
-  - "2.1.6"
-
-sudo: false
