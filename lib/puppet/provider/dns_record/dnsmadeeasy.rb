@@ -21,19 +21,18 @@
 module DNSMadeeasy
   module Connection
     def dnsmadeeasy
-      @@dnsmadeeasy ||= Fog::DNS.new( :provider               => "DNSMadeEasy",
-                                      :dnsmadeeasy_api_key    => @username,
-                                      :dnsmadeeasy_secret_key => @password )
+      @@dnsmadeeasy ||= Fog::DNS.new(provider: 'DNSMadeEasy',
+                                      dnsmadeeasy_api_key: @username,
+                                      dnsmadeeasy_secret_key: @password)
     end
   end
 end
 
 Puppet::Type.type(:dns_record).provide(:dnsmadeeasy) do
-
-  confine :feature => :fog
+  confine feature: :fog
   include DNSMadeeasy::Connection
 
-  desc "Manage DNSMadeEasy records."
+  desc 'Manage DNSMadeEasy records.'
 
   def create
     @zone = dnsmadeeasy.zones.get(resource[:domain])
@@ -46,10 +45,10 @@ Puppet::Type.type(:dns_record).provide(:dnsmadeeasy) do
 
     begin
       Puppet.debug("DNSMadeEasy: Attempting to create record type #{resource[:type]} for #{resource[:name]} as #{resource[:content]}")
-      record = @zone.records.create( :name  => resource[:name],
-                                     :value => resource[:content],
-                                     :type  => resource[:type],
-                                     :ttl   => resource[:ttl] )
+      record = @zone.records.create(name: resource[:name],
+                                     value: resource[:content],
+                                     type: resource[:type],
+                                     ttl: resource[:ttl])
       Puppet.info("DNSMadeEasy: Created #{resource[:type]} record for #{resource[:name]}.#{resource[:domain]}")
     rescue Excon::Errors::UnprocessableEntity
       Puppet.debug("DNSMadeEasy: #{resource[:name]}.#{resource[:domain]} already exists.")
@@ -57,20 +56,21 @@ Puppet::Type.type(:dns_record).provide(:dnsmadeeasy) do
   end
 
   def exists?
-    @username, @password = resource[:username], resource[:password]
+    @username = resource[:username]
+    @password = resource[:password]
     @zone = dnsmadeeasy.zones.get(resource[:domain])
     records = @zone.records.all
-    if records.detect { |r| r.name == resource[:name] and r.value == resource[:content] and r.ttl == resource[:ttl].to_i }
-      return true
+    if records.detect { |r| (r.name == resource[:name]) && (r.value == resource[:content]) && (r.ttl == resource[:ttl].to_i) }
+      true
     else
-      return false
+      false
     end
   end
 
   def destroy
     @zone = dnsmadeeasy.zones.get(resource[:domain])
     @zone.records.all.each do |r|
-      if ( r.name == resource[:name] ) and ( r.type == resource[:type] )
+      if (r.name == resource[:name]) && (r.type == resource[:type])
         r.destroy
         Puppet.info("DNSMadeEasy: Deleted #{resource[:type]} record for #{resource[:name]}.#{resource[:domain]}")
       end

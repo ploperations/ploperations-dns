@@ -1,0 +1,28 @@
+name: PR Testing
+
+on:
+  - pull_request
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        puppet_versions:
+          - '6'
+          - '7'
+
+    name: Puppet ${{ matrix.puppet_versions }}
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install the PDK
+      run: |
+        source /etc/os-release
+        wget https://apt.puppet.com/puppet-tools-release-${UBUNTU_CODENAME}.deb
+        sudo dpkg -i puppet-tools-release-${UBUNTU_CODENAME}.deb
+        sudo apt-get update
+        sudo apt-get install pdk
+    - name: Syntax validation
+      run: pdk validate --puppet-version ${{ matrix.puppet_versions }}
+    - name: Unit tests
+      run: pdk test unit --puppet-version ${{ matrix.puppet_versions }}

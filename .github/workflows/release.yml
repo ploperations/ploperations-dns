@@ -1,0 +1,78 @@
+name: Publish Module
+
+on: workflow_dispatch
+
+jobs:
+  publish-module:
+    name: Tag Release and Publish to Forge
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
+          clean: true
+          fetch-depth: 0
+      - name: Get Version
+        id: gv
+        run: |
+          echo "::set-output name=ver::$(jq --raw-output .version metadata.json)"
+      - name: Install the PDK
+        run: |
+          source /etc/os-release
+          wget https://apt.puppet.com/puppet-tools-release-${UBUNTU_CODENAME}.deb
+          sudo dpkg -i puppet-tools-release-${UBUNTU_CODENAME}.deb
+          rm -f puppet-tools-release-${UBUNTU_CODENAME}.deb
+          sudo apt-get update
+          sudo apt-get install pdk
+          pdk bundle install
+      - name: Validate Docs
+        run: |
+          set -e
+          documentation=$(pdk bundle exec puppet strings generate --format markdown)
+          if [ $(echo $documentation | grep -Ec "[1-9]+ undocumented|\[warn\]") -gt 0 ]; then
+            echo "Please resolve documentation issues detected below:"
+            echo "$documentation"
+            exit 1
+          fi
+          if output=$(git status --porcelain) && [ ! -z "$output" ]; then
+            echo "Here is the current git status:"
+            git status
+            echo
+            echo "The following changes were detected:"
+            git --no-pager diff
+            echo "Please submit a PR of changes after running 'pdk bundle exec puppet strings generate --format markdown'"
+            exit 1
+          fi
+      - name: Validate Changelog
+        env:
+          CHANGELOG_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          pdk bundle exec rake changelog
+          check_prs=$(grep -c '### UNCATEGORIZED PRS; LABEL THEM ON GITHUB' CHANGELOG.md) || echo "Check PRs success"
+          if [ $check_prs -gt 0 ]; then
+            echo "Uncategorized PRs found. Please address missing labels in the PRs below:"
+            git --no-pager diff CHANGELOG.md
+            exit 1
+          fi
+          if output=$(git status --porcelain) && [ ! -z "$output" ]; then
+            echo "Here is the current git status:"
+            git status
+            echo
+            echo "The following changes were detected:"
+            git --no-pager diff
+            echo "Uncommitted PRs found in the changelog. Please submit a PR of changes after running 'pdk bundle exec rake changelog'"
+            exit 1
+          fi
+      - name: Tag Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.gv.outputs.ver }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          draft: false
+          prerelease: false
+      - name: Build Module
+        run: pdk build
+      - name: Push to Forge
+        run: pdk release publish --forge-token ${{ secrets.FORGE_API_KEY }} --force

@@ -21,19 +21,18 @@
 module DNSimple
   module Connection
     def dnsimple
-      @@dnsimple ||= Fog::DNS.new( :provider => "DNSimple",
-                                   :dnsimple_email => @username,
-                                   :dnsimple_password => @password )
+      @@dnsimple ||= Fog::DNS.new(provider: 'DNSimple',
+                                   dnsimple_email: @username,
+                                   dnsimple_password: @password)
     end
   end
 end
 
 Puppet::Type.type(:dns_record).provide(:dnsimple) do
-
-  confine :feature => :fog
+  confine feature: :fog
   include DNSimple::Connection
 
-  desc "Manage DNSimple records."
+  desc 'Manage DNSimple records.'
 
   def create
     @zone = dnsimple.zones.get(resource[:domain])
@@ -46,10 +45,10 @@ Puppet::Type.type(:dns_record).provide(:dnsimple) do
 
     begin
       Puppet.debug("DNSimple: Attempting to create record type #{resource[:type]} for #{resource[:name]} as #{resource[:content]}")
-      record = @zone.records.create( :name  => resource[:name],
-                                     :value => resource[:content],
-                                     :type  => resource[:type],
-                                     :ttl   => resource[:ttl] )
+      record = @zone.records.create(name: resource[:name],
+                                     value: resource[:content],
+                                     type: resource[:type],
+                                     ttl: resource[:ttl])
       Puppet.info("DNSimple: Created #{resource[:type]} record for #{resource[:name]}.#{resource[:domain]}")
     rescue Excon::Errors::UnprocessableEntity
       Puppet.debug("DNSimple: #{resource[:name]}.#{resource[:domain]} already exists.")
@@ -57,20 +56,21 @@ Puppet::Type.type(:dns_record).provide(:dnsimple) do
   end
 
   def exists?
-    @username, @password = resource[:username], resource[:password]
+    @username = resource[:username]
+    @password = resource[:password]
     @zone = dnsimple.zones.get(resource[:domain])
     records = @zone.records.all
-    if records.detect { |r| r.name == resource[:name] and r.value == resource[:content] and r.ttl == resource[:ttl].to_i }
-      return true
+    if records.detect { |r| (r.name == resource[:name]) && (r.value == resource[:content]) && (r.ttl == resource[:ttl].to_i) }
+      true
     else
-      return false
+      false
     end
   end
 
   def destroy
     @zone = dnsimple.zones.get(resource[:domain])
     @zone.records.all.each do |r|
-      if ( r.name == resource[:name] ) and ( r.type == resource[:type] )
+      if (r.name == resource[:name]) && (r.type == resource[:type])
         r.destroy
         Puppet.info("DNSimple: Deleted #{resource[:type]} record for #{resource[:name]}.#{resource[:domain]}")
       end

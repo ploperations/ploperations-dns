@@ -18,10 +18,8 @@
 # limitations under the License.
 #
 
-
 Puppet::Type.type(:dns_record).provide(:bind) do
-
-  desc "Manage BIND records."
+  desc 'Manage BIND records.'
 
   mk_resource_methods
 
@@ -29,7 +27,7 @@ Puppet::Type.type(:dns_record).provide(:bind) do
     targets = []
 
     if resources
-      resources.each do |name, resource|
+      resources.each do |_name, resource|
         if value = resource[:domain]
           targets << value
         end
@@ -42,21 +40,21 @@ Puppet::Type.type(:dns_record).provide(:bind) do
     instances = []
     keys = [:name, :ttl, :class, :type, :content]
     ltargets = targets(resources)
-    ltargets.each do | target |
+    ltargets.each do |target|
       records = `dig axfr #{target} +nostats`.split("\n")
       # convert dig output into an array of hashes
-      records.each do | record |
-        next if record[0] == ';' or record == "" # Ignore initial dig comments
+      records.each do |record|
+        next if (record[0] == ';') || (record == '') # Ignore initial dig comments
         # Turn \t from dig into spaces
-        record.gsub! /\t/, ' '
+        record.tr!("\t", ' ')
         # Remove double quotes from records
-        record.gsub! /\"/,''
+        record.delete!('"')
         converted_hash = {}
-        keys.each_with_index {|k,i|converted_hash[k] = record.split(" ", 5)[i]}
+        keys.each_with_index { |k, i| converted_hash[k] = record.split(' ', 5)[i] }
         # Remove trailing .
         converted_hash[:name] = converted_hash[:name].chop!
-        converted_hash[:content].chop! if converted_hash[:content][-1,1] == '.'
-        converted_hash[:content][0].chop! if converted_hash[:content][0][-1,1] == '.'
+        converted_hash[:content].chop! if converted_hash[:content][-1, 1] == '.'
+        converted_hash[:content][0].chop! if converted_hash[:content][0][-1, 1] == '.'
         converted_hash[:ensure] = :present
         converted_hash[:old_type] = converted_hash[:type]
         # Convert string content to array
@@ -86,11 +84,11 @@ Puppet::Type.type(:dns_record).provide(:bind) do
 
   def flush
     Puppet.debug("flushing zone #{resource[:domain]}")
-    if ! @property_hash.empty? && @property_hash[:ensure] != :absent
+    if !@property_hash.empty? && @property_hash[:ensure] != :absent
       # Need to quote the content property if it's a TXT record
       # Delete existing record if updating
-      if ! @property_hash[:name].nil?
-        @property_hash[:old_content].each do | value |
+      unless @property_hash[:name].nil?
+        @property_hash[:old_content].each do |value|
           Puppet.debug("Need to delete old record first to edit. Running - echo 'update delete #{resource[:name]} #{resource[:ttl]} #{@property_hash[:old_type]} #{value}\nsend\' | /usr/bin/nsupdate -v -k #{resource[:ddns_key]}")
           if resource[:type] == 'TXT'
             system 'bash', '-c', "echo 'update delete #{resource[:name]} #{resource[:ttl]} #{@property_hash[:old_type]} \"#{value}\"\nsend\' | /usr/bin/nsupdate -v -k #{resource[:ddns_key]}"
@@ -100,8 +98,8 @@ Puppet::Type.type(:dns_record).provide(:bind) do
         end
       end
       # Create record
-      #`/bin/bash -c 'echo -e "update add #{resource[:name]} #{resource[:ttl]} #{resource[:type]} #{resource[:content][0]}\nsend"'  | /usr/bin/nsupdate -v -k /etc/dhcp_updater`
-      resource[:content].each do | value |
+      # `/bin/bash -c 'echo -e "update add #{resource[:name]} #{resource[:ttl]} #{resource[:type]} #{resource[:content][0]}\nsend"'  | /usr/bin/nsupdate -v -k /etc/dhcp_updater`
+      resource[:content].each do |value|
         Puppet.debug("Running - echo 'update add #{resource[:name]} #{resource[:ttl]} #{resource[:type]} #{value}\nsend\' | /usr/bin/nsupdate -v -k #{resource[:ddns_key]}")
         if resource[:type] == 'TXT'
           system 'bash', '-c', "echo 'update add #{resource[:name]} #{resource[:ttl]} #{resource[:type]} \"#{value}\"\nsend\' | /usr/bin/nsupdate -v -k #{resource[:ddns_key]}"
@@ -111,7 +109,7 @@ Puppet::Type.type(:dns_record).provide(:bind) do
         Puppet.info("BIND: Created #{resource[:type]} record for #{resource[:name]} with ttl #{resource[:ttl]}")
       end
     else
-      resource[:content].each do | value |
+      resource[:content].each do |value|
         Puppet.debug("Running - echo 'update delete #{resource[:name]} #{resource[:ttl]} #{resource[:type]} #{value}\nsend\' | /usr/bin/nsupdate -v -k #{resource[:ddns_key]}")
         if resource[:type] == 'TXT'
           system 'bash', '-c', "echo 'update delete #{resource[:name]} #{resource[:ttl]} #{resource[:type]} \"#{value}\"\nsend\' | /usr/bin/nsupdate -v -k #{resource[:ddns_key]}"
